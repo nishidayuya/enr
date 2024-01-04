@@ -1,31 +1,51 @@
-# Enr
+# enr: EverNote Request
 
-TODO: Delete this and the text below, and describe your gem
+An Evernote command line program
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/enr`. To experiment with that code, run `bin/console` for an interactive prompt.
+[![License X11](https://img.shields.io/badge/license-X11-blue.svg)](https://raw.githubusercontent.com/nishidayuya/enr/master/LICENSE.txt)
+[![Gem Version](https://badge.fury.io/rb/enr.svg)](https://rubygems.org/gems/enr)
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
-
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-
-If bundler is not being used to manage dependencies, install the gem by executing:
-
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+```console
+$ gem install enr
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+### Setup
 
-## Development
+Set `ENR_TOKEN` environment your [developer token](https://www.evernote.com/api/DeveloperToken.action).
 
-After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+```console
+$ export ENR_TOKEN='your developer token'
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```
+
+### Read ENML from GUID
+
+```console
+$ enr get GUID
+```
+
+### Create note from ENML file
+
+```console
+$ enr post INPUT-PATH
+```
+
+### Update existing note from ENML file
+
+```console
+$ enr put GUID INPUT-PATH
+```
+
+### Destroy note by GUID
+
+```console
+$ enr delete GUID
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/enr.
+Bug reports and pull requests are welcome on GitHub at https://github.com/nishidayuya/enr .
