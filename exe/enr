@@ -1,3 +1,169 @@
 #!/usr/bin/env ruby
 
+require "evernote_oauth"
+# workaround https://github.com/Evernote/evernote-sdk-ruby/pull/23
+Fixnum = Integer if !defined?(Fixnum)
+
 require "enr"
+
+module Enr
+  class << self
+    def token
+      return ENV.fetch("ENR_TOKEN")
+    end
+
+    def create_evernote_client
+      client = EvernoteOAuth::Client.new(token:, sandbox: false)
+      user_store = client.user_store
+      api_version_ok = user_store.checkVersion(
+        "Enr",
+        Evernote::EDAM::UserStore::EDAM_VERSION_MAJOR,
+        Evernote::EDAM::UserStore::EDAM_VERSION_MINOR,
+      )
+      raise "Evernote API version mismatch" if !api_version_ok
+
+      return client
+    end
+  end
+end
+
+module Enr::Cli
+  USAGE = <<~USAGE
+    Usage: #{File.basename(Process.argv0)} SUB-COMMAND
+
+    SUB-COMMANDs are:
+
+    - get
+    - post
+    - put
+    - delete
+  USAGE
+
+  class << self
+    def call(argv)
+      sub_command, *rest_argv = *argv
+      sub_command_class_name = (sub_command || "dummy").capitalize
+      begin
+        sub_command_class = const_get(sub_command_class_name)
+      rescue NameError
+        $stderr.puts(USAGE)
+        exit(1)
+      end
+      sub_command_class.(rest_argv)
+    end
+  end
+end
+
+module Enr::Cli::Get
+  USAGE = <<~USAGE
+    Usage: #{File.basename(Process.argv0)} get GUID
+  USAGE
+
+  class << self
+    def call(argv)
+      guid, _attachment_name = *argv
+      if !guid
+        $stderr.puts(USAGE)
+        exit(1)
+      end
+      client = Enr.create_evernote_client
+      note_store = client.note_store
+      note = note_store.getNote(Enr.token, guid, true, false, false, false)
+      puts(note.content)
+    end
+  end
+end
+
+module Enr::Cli::Post
+  USAGE = <<~USAGE
+    Usage: #{File.basename(Process.argv0)} post INPUT-PATH
+  USAGE
+
+  class << self
+    def call(argv)
+      note = build_note_from_argv(argv)
+      client = Enr.create_evernote_client
+      note_store = client.note_store
+      created_note = note_store.createNote(Enr.token, note)
+      puts("created note: guid=#{created_note.guid}")
+    end
+
+    private
+
+    def build_note_from_argv(argv)
+      s_input_path = argv.shift
+      if !s_input_path
+        $stderr.puts(USAGE)
+        exit(1)
+      end
+
+      input_path = Pathname(s_input_path)
+      title = input_path.basename.to_s
+      note = Evernote::EDAM::Type::Note.new(
+        title:,
+        content: input_path.read,
+      )
+      return note
+    end
+  end
+end
+
+module Enr::Cli::Put
+  USAGE = <<~USAGE
+    Usage: #{File.basename(Process.argv0)} put GUID INPUT-PATH
+  USAGE
+
+  class << self
+    def call(argv)
+      guid = argv.shift
+      note_from_argv = build_note_from_argv(argv)
+      client = Enr.create_evernote_client
+      note_store = client.note_store
+      note = note_store.getNote(Enr.token, guid, false, false, false, false)
+      note.content = note_from_argv.content
+      updated_note = note_store.updateNote(Enr.token, note)
+      puts("updated note: guid=#{updated_note.guid}")
+    end
+
+    private
+
+    def build_note_from_argv(argv)
+      s_input_path = argv.shift
+      if !s_input_path
+        $stderr.puts(USAGE)
+        exit(1)
+      end
+
+      input_path = Pathname(s_input_path)
+      title = input_path.basename.to_s
+      note = Evernote::EDAM::Type::Note.new(
+        title:,
+        content: input_path.read,
+      )
+      return note
+    end
+  end
+end
+
+module Enr::Cli::Delete
+  USAGE = <<~USAGE
+    Usage: #{File.basename(Process.argv0)} delete GUID
+  USAGE
+
+  class << self
+    def call(argv)
+      guid = argv.shift
+      if !guid
+        $stderr.puts(USAGE)
+        exit(1)
+      end
+
+      client = Enr.create_evernote_client
+      note_store = client.note_store
+      sequence_number = note_store.deleteNote(Enr.token, guid)
+      puts("deleted note: guid=#{guid} sequence_number=#{sequence_number.inspect}")
+    end
+  end
+end
+
+Enr::Cli.(ARGV)
