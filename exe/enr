@@ -8,6 +8,10 @@ require "enr"
 
 module Enr
   class << self
+    def debug?
+      return ENV.fetch("ENR_DEBUG", "").length > 0
+    end
+
     def token
       return ENV.fetch("ENR_TOKEN")
     end
@@ -50,6 +54,13 @@ module Enr::Cli
         exit(1)
       end
       sub_command_class.(rest_argv)
+    rescue SystemExit
+      raise
+    rescue Exception => e
+      $stderr.puts(e.inspect)
+      raise if Enr.debug?
+
+      exit(1)
     end
   end
 end
