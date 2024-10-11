@@ -7,6 +7,7 @@ Gem::Specification.new do |spec|
   spec.version = Enr::VERSION
   spec.authors = ["Yuya.Nishida."]
 
+  spec.licenses = %w[X11]
   spec.summary = "enr: EverNote Request"
   spec.description = "An Evernote command program"
   spec.homepage = "https://github.com/nishidayuya/enr"
